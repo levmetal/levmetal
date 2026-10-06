@@ -1,0 +1,52 @@
+{
+  "$comment": "Which projects appear under 'Selected work'. With source 'pinned' the cards follow the repos pinned on github.com/levmetal (same order, max 6): change your pins and the profile updates on the next workflow run. Use source 'manual' plus 'repos' to pick them here instead. 'overrides' polishes the copy for a repo; anything missing falls back to the repo's own description, topics, languages and homepage.",
+  "source": "pinned",
+  "repos": [],
+  "max": 6,
+  "overrides": {
+    "BLAME": {
+      "kicker": "PowerShell module · CLI",
+      "description": "systemd-analyze blame, for Windows. Reads the boot diagnostics log Windows already keeps and shows which apps, drivers and services slowed your last startup.",
+      "chips": ["PowerShell", "GitHub Actions", "Windows internals"],
+      "status": "ci"
+    },
+    "LolNexus": {
+      "title": "LoL Nexus",
+      "kicker": "Web app · React + TypeScript",
+      "description": "Companion app for League of Legends: champion data, real-time item scaling and ability-damage maths, with a Playwright QA suite guarding the game logic.",
+      "chips": ["React", "TypeScript", "Zustand", "Playwright"]
+    },
+    "PLAYERSOUND": {
+      "title": "PlayerSound",
+      "kicker": "Web app · Next.js",
+      "description": "Search and stream audio from YouTube with no login. Two playback engines (local stream or official iframe) and playlists persisted locally in IndexedDB.",
+      "chips": ["Next.js", "React", "IndexedDB", "Framer Motion"],
+      "link": "https://playersound.vercel.app",
+      "status": "live"
+    },
+    "ABC-autosalvage-web": {
+      "title": "ABC Auto Salvage",
+      "kicker": "Client website · Astro 6",
+      "description": "Production site for an auto-salvage business. Astro islands with React, GSAP-driven motion and Lenis smooth scrolling, styled with Tailwind CSS v4.",
+      "chips": ["Astro", "React", "GSAP", "Tailwind v4"]
+    },
+    "Rodriguez-yard": {
+      "title": "Rodriguez Yard",
+      "kicker": "Client website · Astro",
+      "description": "Fully responsive landing for a North Carolina salvage yard, with a serverless “get an offer” flow that turns visitors into qualified leads.",
+      "chips": ["Astro", "React", "Tailwind", "Serverless"]
+    },
+    "personal-books-skills": {
+      "title": "Personal Books Skills",
+      "kicker": "AI tooling · Claude Code",
+      "description": "A Claude Code plugin marketplace of agent skills distilled from books on design, UX and AI — Don Norman, Designing AI Interfaces and more.",
+      "chips": ["Claude Code", "AI agents", "UX"]
+    },
+    "Visa-system-landing-page": {
+      "title": "Visa System",
+      "kicker": "Client website · Astro",
+      "description": "Landing page for a US visa application service: clear service tiers, modal-driven contact flow and optimised images for a fast first load.",
+      "chips": ["Astro", "Tailwind", "Sharp", "Micromodal"]
+    }
+  }
+}

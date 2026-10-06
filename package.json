@@ -1,0 +1,11 @@
+{
+  "name": "levmetal-profile",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build-assets.mjs"
+  },
+  "dependencies": {
+    "subset-font": "^2.9.0"
+  }
+}

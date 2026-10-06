@@ -1,0 +1,52 @@
+name: Refresh profile
+
+# Pinning or reordering repos on GitHub doesn't fire any event, so the cards are
+# rebuilt on a schedule too. Run it by hand from the Actions tab to update now.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "scripts/**"
+      - "projects.config.json"
+      - "package-lock.json"
+      - ".github/workflows/profile.yml"
+  schedule:
+    - cron: "0 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: refresh-profile
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Build cards from pinned repos
+        run: node scripts/build-assets.mjs
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Commit changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A assets README.md
+          if git diff --cached --quiet; then
+            echo "Profile already up to date."
+          else
+            git commit -m "chore: refresh profile cards"
+            git push
+          fi
