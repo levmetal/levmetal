@@ -163,53 +163,39 @@ const panel = (W, H, cut = 32) => `
   ${cornerAccent(0, 0, W, cut, 56)}`;
 
 /* ---------------------------------------------------------------- waveform */
-// Analog sine -> A/D converter -> digital square wave spelling "LEVI" in ASCII.
-function waveform({ x0, x1, cy, amp, adcW = 44 }) {
-  const mid = x0 + (x1 - x0) * 0.47;
-  const pts = [];
-  const cycles = 6.5;
-  const sineW = mid - x0;
-  for (let i = 0; i <= 260; i++) {
-    const t = i / 260;
-    const env = Math.sin(Math.PI * Math.min(1, t * 1.15)) * 0.35 + 0.65; // gentle AM envelope
-    pts.push([x0 + t * sineW, cy - Math.sin(t * cycles * 2 * Math.PI) * amp * env]);
-  }
-  const adcX = mid + 14;
-  const sqStart = adcX + adcW + 14;
-  const bits = "LEVI".split("").map((c) => c.charCodeAt(0).toString(2).padStart(8, "0")).join("");
-  const bw = (x1 - sqStart) / bits.length;
-  const hi = cy - amp * 0.8;
-  const lo = cy + amp * 0.8;
+// Analog sine -> A/D converter -> digital square wave. Both halves are the
+// textbook versions of each other: same amplitude, same wavelength, the same
+// number of whole cycles, and the square wave has a 50% duty cycle in phase
+// with the sine (high while the sine is positive).
+function waveform({ x0, x1, cy, amp, adcW = 44, cycles = 6 }) {
+  const gap = 14;
+  const lambda = (x1 - x0 - adcW - gap * 2) / (cycles * 2);
+  const sineEnd = x0 + cycles * lambda;
+  const adcX = sineEnd + gap;
+  const sqStart = adcX + adcW + gap;
+  const hi = cy - amp, lo = cy + amp;
 
-  let d = `M ${f(pts[0][0])} ${f(pts[0][1])}`;
-  for (const [x, y] of pts.slice(1)) d += ` L ${f(x)} ${f(y)}`;
+  const steps = cycles * 48;
+  let d = `M ${f(x0)} ${f(cy)}`;
+  for (let i = 1; i <= steps; i++) {
+    const t = i / steps;
+    d += ` L ${f(x0 + t * cycles * lambda)} ${f(cy - Math.sin(t * cycles * 2 * Math.PI) * amp)}`;
+  }
   // One continuous subpath (the A/D box covers the segment through it): a
   // second "M" would restart the dash pattern and show two pulses at once.
   d += ` L ${f(adcX)} ${f(cy)} L ${f(adcX + adcW)} ${f(cy)} L ${f(sqStart)} ${f(cy)}`;
-  let y = bits[0] === "1" ? hi : lo;
-  d += ` L ${f(sqStart)} ${f(y)}`;
-  for (let i = 0; i < bits.length; i++) {
-    const ny = bits[i] === "1" ? hi : lo;
-    const x = sqStart + i * bw;
-    if (ny !== y) { d += ` L ${f(x)} ${f(ny)}`; y = ny; }
-    d += ` L ${f(x + bw)} ${f(y)}`;
+  for (let c = 0; c < cycles; c++) {
+    const x = sqStart + c * lambda;
+    d += ` L ${f(x)} ${f(hi)} L ${f(x + lambda / 2)} ${f(hi)} L ${f(x + lambda / 2)} ${f(lo)} L ${f(x + lambda)} ${f(lo)}`;
   }
+  d += ` L ${f(sqStart + cycles * lambda)} ${f(cy)}`;
 
-  // rough path length for the travelling-pulse dash animation
-  let len = 0;
-  for (let i = 1; i < pts.length; i++) len += Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]);
-  len += (x1 - adcX) + bits.length * amp * 0.8;
+  // One bit per half-cycle under the square wave: 1 0 1 0 …
+  const bitLabels = Array.from({ length: cycles * 2 }, (_, i) =>
+    `<text x="${f(sqStart + (i + 0.5) * (lambda / 2))}" y="${f(lo + 24)}" text-anchor="middle">${i % 2 ? 0 : 1}</text>`).join("");
+  const byteLabels = `<text x="${f(sqStart)}" y="${f(hi - 16)}" letter-spacing="1.5">DIGITAL OUT</text>`;
 
-  const bitLabels = bits
-    .split("")
-    .map((b, i) => `<text x="${f(sqStart + i * bw + bw / 2)}" y="${f(lo + 26)}" text-anchor="middle">${b}</text>`)
-    .join("");
-  const byteLabels = "LEVI"
-    .split("")
-    .map((ch, i) => `<text x="${f(sqStart + (i * 8 + 4) * bw)}" y="${f(hi - 16)}" text-anchor="middle">0x${ch.charCodeAt(0).toString(16).toUpperCase()} · ${ch}</text>`)
-    .join("");
-
-  return { d, len: Math.round(len), adcX, adcW, cy, amp, bitLabels, byteLabels, splitAt: (adcX - x0) / (x1 - x0) };
+  return { d, adcX, adcW, cy, amp, bitLabels, byteLabels, splitAt: (adcX - x0) / (x1 - x0) };
 }
 
 /* ------------------------------------------------------------------ header */
@@ -258,7 +244,7 @@ function waveform({ x0, x1, cy, amp, adcW = 44 }) {
   ${slashBars(64, 226)}
   <text x="64" y="262" class="sans" font-size="18" fill="${C.muted}">From the physical layer to the presentation layer.</text>
 
-  <!-- signal: analog (telecom) → A/D → digital "LEVI" (web) -->
+  <!-- signal: analog sine (telecom) → A/D → digital square wave (web) -->
   <path d="${w.d}" fill="none" stroke="url(#wave)" stroke-width="2" stroke-linejoin="round"/>
   <path d="${w.d}" fill="none" stroke="${C.accent}" stroke-width="5" stroke-linecap="round" pathLength="${L}" stroke-dasharray="${seg} ${L + seg}" filter="url(#blur)" opacity=".8">
     <animate attributeName="stroke-dashoffset" from="${seg}" to="${-L}" dur="5s" repeatCount="indefinite"/>
